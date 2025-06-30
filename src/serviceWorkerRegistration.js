@@ -2,7 +2,7 @@ const isAllowedDomain = Boolean(
   window.location.hostname === 'localhost' || // localhost
   window.location.hostname === '[::1]' || // IPv6 localhost
   window.location.hostname.match(/^127(\.\d{1,3}){3}$/) || // IPv4 localhost
-  window.location.hostname === 'tbgadmin.neuraq.in' // custom domain
+  window.location.hostname === 'tadmin.neuraq.in' // custom domain
 );
 
 export function register(config) {

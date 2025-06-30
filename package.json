@@ -1,8 +1,8 @@
 {
-  "name": "TBG-ADMIN",
+  "name": "palliative-web-app",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://tbgadmin.neuraq.in",
+  "homepage": "https://tadmin.neuraq.in",
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
@@ -46,11 +46,11 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build -r https://github.com/your-username/your-repo.git"
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
