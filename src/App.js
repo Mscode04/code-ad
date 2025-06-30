@@ -48,6 +48,7 @@ function App() {
         <Route path="req" element={<GasRequests/>} />
         <Route path="msg" element={<AllMessages/>} />
 
+
         <Route path="all-customers" element={<AllCustomers />} />
         <Route path="all-sales" element={<AllSales />} />
         <Route path="customer/:id" element={<CustomerProfile />} />
