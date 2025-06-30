@@ -3,13 +3,13 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDQkLSLQXwUlnWULZY3djGfer6tTPEYCSo",
-  authDomain: "palliative-web.firebaseapp.com",
-  projectId: "palliative-web",
-  storageBucket: "palliative-web.firebasestorage.app",
-  messagingSenderId: "271871285310",
-  appId: "1:271871285310:web:9fc191edb1d9763719d96f",
-  measurementId: "G-FGHDCH3NZX"
+  apiKey: "AIzaSyBDoDc6qX8u4Y6FKJIZTbGnEj4J5nISSKg",
+  authDomain: "tbg-base.firebaseapp.com",
+  projectId: "tbg-base",
+  storageBucket: "tbg-base.firebasestorage.app",
+  messagingSenderId: "1084027646100",
+  appId: "1:1084027646100:web:c14f8414d0597206c00481",
+  measurementId: "G-RDZ67TZSJ9"
 };
 
 const FirebaseApp = initializeApp(firebaseConfig);
