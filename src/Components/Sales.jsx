@@ -20,10 +20,10 @@ const Sales = () => {
     productData: null,
     routeId: "",
     routeData: null,
-    salesQuantity: 1,
-    emptyQuantity: 0,
-    todayCredit: 0,
-    totalAmountReceived: 0,
+    salesQuantity: "",
+    emptyQuantity: "",
+    todayCredit: "",
+    totalAmountReceived: "",
     totalBalance: 0,
     previousBalance: 0,
     date: new Date().toISOString().split('T')[0],
@@ -290,7 +290,18 @@ const Sales = () => {
   return (
     <div className="form-container">
       <h2>New Sales</h2>
-      <ToastContainer position="top-right" autoClose={5000} />
+      <ToastContainer 
+  position="top-right" 
+  autoClose={5000}
+  closeButton={false}
+  hideProgressBar={false}
+  newestOnTop={false}
+  closeOnClick
+  rtl={false}
+  pauseOnFocusLoss
+  draggable
+  pauseOnHover
+/>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Sale ID:</label>
@@ -401,7 +412,7 @@ const Sales = () => {
                 value={formData.salesQuantity}
                 onChange={handleChange}
                 required
-                min="1"
+                
               />
             </div>
             
@@ -413,7 +424,7 @@ const Sales = () => {
                 value={formData.emptyQuantity}
                 onChange={handleChange}
                 required
-                min="0"
+                
                 max={selectedCustomer?.currentGasOnHand || 0}
               />
             </div>
@@ -446,7 +457,7 @@ const Sales = () => {
                 value={formData.totalAmountReceived}
                 onChange={handleChange}
                 required
-                min="0"
+                
               />
             </div>
             
@@ -475,7 +486,7 @@ const Sales = () => {
           </>
         )}
         
-        <button type="submit" className="submit-btn">Save</button>
+        <button type="submit" className="submit-btn btn-success btn-sm">Save</button>
       </form>
     </div>
   );
