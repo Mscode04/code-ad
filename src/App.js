@@ -32,23 +32,32 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={!isAuthenticated ? <Navigate to="/login" /> : <Navigate to="/dashboard" />} />
-      <Route path="/login" element={!isAuthenticated ? <LoginPage setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/dashboard" />} />
+      <Route 
+        path="/" 
+        element={!isAuthenticated ? <Navigate to="/login" /> : <Navigate to="/dashboard" />} 
+      />
+      <Route 
+        path="/login" 
+        element={!isAuthenticated ? 
+          <LoginPage setIsAuthenticated={setIsAuthenticated} /> : 
+          <Navigate to="/dashboard" />} 
+      />
       <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
       
       {/* Protected routes */}
-      <Route path="/" element={isAuthenticated ? <Main /> : <Navigate to="/login" />}>
+      <Route 
+        path="/" 
+        element={isAuthenticated ? <Main /> : <Navigate to="/login" />}
+      >
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="new-connection" element={<NewConnection />} />
         <Route path="sales" element={<Sales />} />
-        <Route path="routes" element={<Routess/>} />
+        <Route path="routes" element={<Routess />} />
         <Route path="products" element={<Products />} />
         <Route path="help" element={<Help />} />
         <Route path="check-in" element={<Checkin />} />
-        <Route path="req" element={<GasRequests/>} />
-        <Route path="msg" element={<AllMessages/>} />
-
-
+        <Route path="req" element={<GasRequests />} />
+        <Route path="msg" element={<AllMessages />} />
         <Route path="all-customers" element={<AllCustomers />} />
         <Route path="all-sales" element={<AllSales />} />
         <Route path="customer/:id" element={<CustomerProfile />} />
@@ -57,8 +66,11 @@ function App() {
         <Route path="sales/update/:id" element={<UpdateSale />} />
       </Route>
 
-      {/* Redirect to login if not authenticated */}
-      <Route path="*" element={!isAuthenticated ? <Navigate to="/login" /> : <Navigate to="/dashboard" />} />
+      {/* Catch-all route */}
+      <Route 
+        path="*" 
+        element={!isAuthenticated ? <Navigate to="/login" /> : <Navigate to="/dashboard" />} 
+      />
     </Routes>
   );
 }
