@@ -27,7 +27,7 @@ const Sales = () => {
     totalBalance: 0,
     previousBalance: 0,
     date: new Date().toISOString().split('T')[0],
-    customPrice: null // Added custom price field
+    customPrice: null
   });
 
   useEffect(() => {
@@ -73,7 +73,7 @@ const Sales = () => {
           ...prev,
           customerData: customer,
           previousBalance: customer.currentBalance || 0,
-          totalBalance: (customer.currentBalance || 0) + prev.todayCredit - prev.totalAmountReceived
+          totalBalance: (customer.currentBalance || 0) + (prev.todayCredit || 0) - (prev.totalAmountReceived || 0)
         }));
       }
     }
@@ -87,8 +87,8 @@ const Sales = () => {
         setFormData(prev => ({
           ...prev,
           productData: product,
-          todayCredit: (prev.customPrice || product.price) * prev.salesQuantity,
-          totalBalance: (prev.previousBalance || 0) + ((prev.customPrice || product.price) * prev.salesQuantity) - prev.totalAmountReceived
+          todayCredit: (prev.customPrice || product.price) * (prev.salesQuantity || 0),
+          totalBalance: (prev.previousBalance || 0) + ((prev.customPrice || product.price) * (prev.salesQuantity || 0)) - (prev.totalAmountReceived || 0)
         }));
       }
     }
@@ -110,7 +110,7 @@ const Sales = () => {
   useEffect(() => {
     if (selectedProduct && formData.salesQuantity) {
       const currentPrice = formData.customPrice || selectedProduct.price;
-      const todayCredit = Number(currentPrice) * Number(formData.salesQuantity);
+      const todayCredit = Number(currentPrice) * Number(formData.salesQuantity || 0);
       const previousBalance = Number(formData.previousBalance) || 0;
       const totalAmountReceived = Number(formData.totalAmountReceived) || 0;
       const totalBalance = previousBalance + todayCredit - totalAmountReceived;
@@ -141,12 +141,12 @@ const Sales = () => {
       const updatedData = {
         ...prev,
         customPrice: price > 0 ? price : null,
-        todayCredit: price > 0 ? price * prev.salesQuantity : (selectedProduct?.price || 0) * prev.salesQuantity
+        todayCredit: price > 0 ? price * (prev.salesQuantity || 0) : (selectedProduct?.price || 0) * (prev.salesQuantity || 0)
       };
       
       updatedData.totalBalance = (updatedData.previousBalance || 0) + 
                                updatedData.todayCredit - 
-                               updatedData.totalAmountReceived;
+                               (updatedData.totalAmountReceived || 0);
       
       return updatedData;
     });
@@ -157,7 +157,7 @@ const Sales = () => {
       ...prev,
       customerId: selectedOption ? selectedOption.value : "",
       customerData: selectedOption ? selectedOption.data : null,
-      customPrice: null // Reset custom price when customer changes
+      customPrice: null
     }));
   };
 
@@ -166,7 +166,7 @@ const Sales = () => {
       ...prev,
       productId: selectedOption ? selectedOption.value : "",
       productData: selectedOption ? selectedOption.data : null,
-      customPrice: null // Reset custom price when product changes
+      customPrice: null
     }));
   };
 
@@ -191,7 +191,15 @@ const Sales = () => {
       return;
     }
 
+    if (!selectedProduct) {
+      toast.error("Please select a product");
+      return;
+    }
 
+    if (formData.salesQuantity <= 0) {
+      toast.error("Sales quantity must be greater than 0");
+      return;
+    }
 
     try {
       // Determine the actual price used
@@ -204,9 +212,9 @@ const Sales = () => {
         customerPhone: selectedCustomer.phone,
         customerAddress: selectedCustomer.address,
         productName: selectedProduct.name,
-        productPrice: actualPrice, // Use the actual price (custom or default)
-        baseProductPrice: selectedProduct.price, // Store the base price for reference
-        isCustomPrice: formData.customPrice !== null, // Flag for custom pricing
+        productPrice: actualPrice,
+        baseProductPrice: selectedProduct.price,
+        isCustomPrice: formData.customPrice !== null,
         routeId: selectedRoute.id,
         routeName: selectedRoute.name,
         timestamp: new Date()
@@ -268,7 +276,7 @@ const Sales = () => {
   // Prepare options for select components
   const customerOptions = customers.map(customer => ({
     value: customer.id,
-    label: `${customer.name} (${customer.phone}) - Balance: ₹${customer.currentBalance || 0}`,
+    label: `${customer.name} (${customer.phone}) - Balance: ₹${customer.currentBalance || 0} - Gas: ${customer.currentGasOnHand || 0}`,
     data: customer
   }));
 
@@ -288,17 +296,17 @@ const Sales = () => {
     <div className="form-container">
       <h2>New Sales</h2>
       <ToastContainer 
-  position="top-right" 
-  autoClose={5000}
-  closeButton={false}
-  hideProgressBar={false}
-  newestOnTop={false}
-  closeOnClick
-  rtl={false}
-  pauseOnFocusLoss
-  draggable
-  pauseOnHover
-/>
+        position="top-right" 
+        autoClose={5000}
+        closeButton={false}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Sale ID:</label>
@@ -348,7 +356,7 @@ const Sales = () => {
         {selectedCustomer && (
           <div className="customer-details">
             <p><strong>Current Balance:</strong> ₹{selectedCustomer.currentBalance || 0}</p>
-            <p><strong>Gas On Hand:</strong> {selectedCustomer.currentGasOnHand || 0}</p>
+            <p><strong>Gas On Hand:</strong> {selectedCustomer.currentGasOnHand || 0} (can be negative)</p>
           </div>
         )}
         
@@ -409,21 +417,21 @@ const Sales = () => {
                 value={formData.salesQuantity}
                 onChange={handleChange}
                 required
-                
+                min="1"
               />
             </div>
             
             <div className="form-group">
-              <label>Empty Quantity (Current on hand: {selectedCustomer?.currentGasOnHand || 0}):</label>
+              <label>Empty Quantity:</label>
               <input
                 type="number"
                 name="emptyQuantity"
                 value={formData.emptyQuantity}
                 onChange={handleChange}
                 required
-                
-                
+                min="0"
               />
+              <small className="text-muted">Current on hand: {selectedCustomer?.currentGasOnHand || 0}</small>
             </div>
             
             <div className="form-group">
@@ -454,7 +462,7 @@ const Sales = () => {
                 value={formData.totalAmountReceived}
                 onChange={handleChange}
                 
-                
+                min="0"
               />
             </div>
             
@@ -479,6 +487,7 @@ const Sales = () => {
                 }
                 readOnly
               />
+              <small className="text-muted">Can be negative if returning more than currently has</small>
             </div>
           </>
         )}
