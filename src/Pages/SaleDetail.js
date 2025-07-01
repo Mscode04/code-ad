@@ -262,7 +262,6 @@ const SaleDetail = () => {
                   {formatCurrency(sale.totalBalance)}
                 </Badge>
               </p>
-              <p><strong>Current Gas On Hand:</strong> {sale.customerData?.currentGasOnHand || 'N/A'}</p>
             </Col>
           </Row>
         </Card.Body>

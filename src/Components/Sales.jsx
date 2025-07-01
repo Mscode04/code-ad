@@ -191,10 +191,7 @@ const Sales = () => {
       return;
     }
 
-    if (formData.emptyQuantity > selectedCustomer.currentGasOnHand) {
-      toast.error(`Empty quantity (${formData.emptyQuantity}) cannot be more than current gas on hand (${selectedCustomer.currentGasOnHand})`);
-      return;
-    }
+
 
     try {
       // Determine the actual price used
@@ -250,7 +247,7 @@ const Sales = () => {
         productData: null,
         routeId: "",
         routeData: null,
-        salesQuantity: 1,
+        salesQuantity: 0,
         emptyQuantity: 0,
         todayCredit: 0,
         totalAmountReceived: 0,
@@ -425,7 +422,7 @@ const Sales = () => {
                 onChange={handleChange}
                 required
                 
-                max={selectedCustomer?.currentGasOnHand || 0}
+                
               />
             </div>
             
@@ -456,7 +453,7 @@ const Sales = () => {
                 name="totalAmountReceived"
                 value={formData.totalAmountReceived}
                 onChange={handleChange}
-                required
+                
                 
               />
             </div>
