@@ -14,8 +14,6 @@ import {
   InputLabel, 
   MenuItem, 
   Select, 
-  Card, 
-  CardContent,
   Typography,
   Divider,
   Button,
@@ -23,14 +21,15 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/system';
 
-const PremiumCard = styled(Card)(({ theme }) => ({
+const PremiumCard = styled('div')(({ theme }) => ({
   background: 'linear-gradient(145deg, #1a237e, #283593)',
   color: 'white',
   borderRadius: '12px',
+  padding: '20px',
   boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
   transition: 'transform 0.3s ease-in-out',
   '&:hover': {
-    transform: 'translateY(-5px)'
+    transform: 'translateY(-2px)'
   }
 }));
 
@@ -162,20 +161,17 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="dashboard-container" style={{ background: '#f5f7fa', padding: '24px' }}>
-      {/* Filters Section */}
-      <PremiumCard sx={{ mb: 4, p: 3 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          flexWrap: 'wrap', 
-          gap: 3,
-          alignItems: 'center'
-        }}>
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel id="time-period-label" sx={{ color: 'white' }}>Time Period</InputLabel>
+    <div className="dashboard-container">
+      {/* Combined Header Section */}
+      <div className="dashboard-header">
+        {/* Filters Section */}
+        <div className="filters-container">
+          <Typography variant="h6" gutterBottom>Filters</Typography>
+          <Divider sx={{ mb: 2 }} />
+          
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Time Period</InputLabel>
             <Select
-              labelId="time-period-label"
-              id="time-period-select"
               value={timePeriod}
               label="Time Period"
               onChange={(e) => {
@@ -183,23 +179,6 @@ const Dashboard = () => {
                 if (e.target.value !== "custom") {
                   setStartDate(null);
                   setEndDate(null);
-                }
-              }}
-              sx={{
-                color: 'white',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                },
-                '& .MuiSvgIcon-root': {
-                  color: 'white',
-                },
-              }}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    bgcolor: '#1a237e',
-                    color: 'white'
-                  }
                 }
               }}
             >
@@ -212,173 +191,127 @@ const Dashboard = () => {
             </Select>
           </FormControl>
 
-          {timePeriod === "custom" && (
-            <>
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => setStartDate(date)}
-                selectsStart
-                startDate={startDate}
-                endDate={endDate}
-                isClearable
-                placeholderText="Start Date"
-                className="custom-datepicker"
-                wrapperClassName="premium-datepicker"
-              />
-              <DatePicker
-                selected={endDate}
-                onChange={(date) => setEndDate(date)}
-                selectsEnd
-                startDate={startDate}
-                endDate={endDate}
-                minDate={startDate}
-                isClearable
-                placeholderText="End Date"
-                className="custom-datepicker"
-                wrapperClassName="premium-datepicker"
-              />
-            </>
-          )}
+{timePeriod === "custom" && (
+  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+    <DatePicker
+      selected={startDate}
+      onChange={(date) => setStartDate(date)}
+      selectsStart
+      startDate={startDate}
+      endDate={endDate}
+      placeholderText="Start Date"
+      className="custom-datepicker"
+      showMonthDropdown
+      showYearDropdown
+      dropdownMode="select"
+      minDate={new Date(2020, 0, 1)} // Set your minimum allowed date
+      maxDate={endDate || new Date()} // Don't allow dates after end date or today
+    />
+    <Typography variant="body1">to</Typography>
+    <DatePicker
+      selected={endDate}
+      onChange={(date) => setEndDate(date)}
+      selectsEnd
+      startDate={startDate}
+      endDate={endDate}
+      minDate={startDate} // Don't allow dates before start date
+      maxDate={new Date()} // Don't allow future dates
+      placeholderText="End Date"
+      className="custom-datepicker"
+      showMonthDropdown
+      showYearDropdown
+      dropdownMode="select"
+    />
+  </Box>
+)}
 
-          <ButtonGroup variant="outlined" sx={{ ml: 'auto', gap: 1 }}>
-            <ActionButton 
-              onClick={() => navigate('/sales')}
-              className={activeView === "new-sales" ? "active" : ""}
-            >
-              New Sales
-            </ActionButton>
-            <ActionButton 
-              onClick={() => navigate('/all-sales')}
-              className={activeView === "sales" ? "active" : ""}
-            >
-              Sales Report
-            </ActionButton>
-            <ActionButton 
-              onClick={() => navigate('/all-customers')}
-              className={activeView === "customers" ? "active" : ""}
-            >
-              Customers
-            </ActionButton>
-            <ActionButton 
-              onClick={() => navigate('/products')}
-              className={activeView === "products" ? "active" : ""}
-            >
-              Products
-            </ActionButton>
+          <ButtonGroup variant="outlined" sx={{ mt: 2 }}>
+            <ActionButton onClick={() => navigate('/all-sales')}>Sales Report</ActionButton>
+            <ActionButton onClick={() => navigate('/all-customers')}>Customers</ActionButton>
           </ButtonGroup>
-        </Box>
-      </PremiumCard>
+        </div>
 
-      {/* Main Chart Section */}
-      <Box sx={{ display: 'flex', gap: 4, mb: 4 }}>
-        <PremiumCard sx={{ flex: 1, p: 3 }}>
-          <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-            Sales vs Amount Received
-          </Typography>
-          <Divider sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', mb: 3 }} />
-          <ResponsiveContainer width="100%" height={400}>
-            <PieChart>
-              <Pie
-                data={salesVsReceivedPieData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={120}
-                fill="#8884d8"
-                dataKey="value"
-                label={({ name, percent }) => `${name}: ₹${(percent * totalSalesAmount).toLocaleString('en-IN')}`}
-              >
-                {salesVsReceivedPieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Amount']}
-                contentStyle={{
-                  background: '#1a237e',
-                  borderColor: '#4e79a7',
-                  borderRadius: '8px',
-                  color: 'white'
-                }}
-              />
-              <Legend 
-                wrapperStyle={{
-                  paddingTop: '20px'
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+        {/* Quick Stats Preview */}
+        <PremiumCard>
+          <Typography variant="h6" gutterBottom>Quick Stats</Typography>
+          <Divider sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', mb: 2 }} />
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+            <div>
+              <Typography variant="body2">Total Sales</Typography>
+              <Typography variant="h5">₹{totalSalesAmount.toLocaleString('en-IN')}</Typography>
+            </div>
+            <div>
+              <Typography variant="body2">Amount Received</Typography>
+              <Typography variant="h5">₹{totalAmountReceived.toLocaleString('en-IN')}</Typography>
+            </div>
+            <div>
+              <Typography variant="body2">Balance Due</Typography>
+              <Typography variant="h5">₹{totalBalance.toLocaleString('en-IN')}</Typography>
+            </div>
+          </Box>
         </PremiumCard>
-      </Box>
+      </div>
 
-      {/* Summary Cards Section */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 3 }}>
-        <PremiumCard>
-          <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-              Total Sales Amount
-            </Typography>
-            <Typography variant="h4" sx={{ color: 'white' }}>
-              ₹{totalSalesAmount.toLocaleString('en-IN')}
-            </Typography>
-          </CardContent>
-        </PremiumCard>
-        
-        <PremiumCard>
-          <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-              Total Sales Quantity
-            </Typography>
-            <Typography variant="h4" sx={{ color: 'white' }}>
-              {totalSalesQuantity}
-            </Typography>
-          </CardContent>
-        </PremiumCard>
-        
-        <PremiumCard>
-          <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-              Total Empty Cylinders
-            </Typography>
-            <Typography variant="h4" sx={{ color: 'white' }}>
-              {totalEmptyQuantity}
-            </Typography>
-          </CardContent>
-        </PremiumCard>
-        
-        <PremiumCard>
-          <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-              Total Gas On Hand
-            </Typography>
-            <Typography variant="h4" sx={{ color: 'white' }}>
-              {totalGasQuantity}
-            </Typography>
-          </CardContent>
-        </PremiumCard>
-        
-        <PremiumCard>
-          <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-              Total Balance Due
-            </Typography>
-            <Typography variant="h4" sx={{ color: 'white' }}>
-              ₹{totalBalance.toLocaleString('en-IN')}
-            </Typography>
-          </CardContent>
-        </PremiumCard>
-        
-        <PremiumCard>
-          <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-              Total Amount Received
-            </Typography>
-            <Typography variant="h4" sx={{ color: 'white' }}>
-              ₹{totalAmountReceived.toLocaleString('en-IN')}
-            </Typography>
-          </CardContent>
-        </PremiumCard>
-      </Box>
+      {/* Main Content Area */}
+      <div className="dashboard-content">
+        {/* Combined Analytics Section */}
+        <div className="analytics-container">
+          {/* Main Chart */}
+          <PremiumCard>
+            <Typography variant="h6" gutterBottom>Sales Analytics</Typography>
+            <Divider sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', mb: 3 }} />
+            <ResponsiveContainer width="100%" height={400}>
+              <PieChart>
+                <Pie
+                  data={salesVsReceivedPieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={120}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ name, percent }) => `${name}: ₹${(percent * totalSalesAmount).toLocaleString('en-IN')}`}
+                >
+                  {salesVsReceivedPieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Amount']}
+                  contentStyle={{
+                    background: '#1a237e',
+                    borderColor: '#4e79a7',
+                    borderRadius: '8px',
+                    color: 'white'
+                  }}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </PremiumCard>
+
+          {/* Summary Cards - Vertical Layout */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <PremiumCard>
+              <Typography variant="h6">Total Sales Qty</Typography>
+              <Typography variant="h4">{totalSalesQuantity}</Typography>
+            </PremiumCard>
+            <PremiumCard>
+              <Typography variant="h6">Empty Cylinders</Typography>
+              <Typography variant="h4">{totalEmptyQuantity}</Typography>
+            </PremiumCard>
+            <PremiumCard>
+              <Typography variant="h6">Gas On Hand</Typography>
+              <Typography variant="h4">{totalGasQuantity}</Typography>
+            </PremiumCard>
+              <PremiumCard>
+            <Typography variant="h6">Total Customers</Typography>
+            <Typography variant="h4">{customersData.length}</Typography>
+          </PremiumCard>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 };

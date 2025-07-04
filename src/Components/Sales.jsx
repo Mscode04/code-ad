@@ -4,6 +4,7 @@ import { db } from "../Firebase/config";
 import Select from 'react-select';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import './sales.css'
 
 const Sales = () => {
   const [customers, setCustomers] = useState([]);
@@ -12,6 +13,8 @@ const Sales = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
+  const [isPaymentOnly, setIsPaymentOnly] = useState(false);
+  
   const [formData, setFormData] = useState({
     id: `TBG${new Date().toISOString().replace(/[-:T.]/g, "").slice(0, 14)}`,
     customerId: "",
@@ -20,14 +23,15 @@ const Sales = () => {
     productData: null,
     routeId: "",
     routeData: null,
-    salesQuantity: "",
-    emptyQuantity: "",
-    todayCredit: "",
-    totalAmountReceived: "",
+    salesQuantity: 0,
+    emptyQuantity: 0,
+    todayCredit: 0,
+    totalAmountReceived: 0,
     totalBalance: 0,
     previousBalance: 0,
     date: new Date().toISOString().split('T')[0],
-    customPrice: null
+    customPrice: null,
+    transactionType: "sale" // 'sale' or 'payment'
   });
 
   useEffect(() => {
@@ -64,6 +68,24 @@ const Sales = () => {
     fetchData();
   }, []);
 
+  const togglePaymentMode = () => {
+    setIsPaymentOnly(!isPaymentOnly);
+    setFormData(prev => ({
+      ...prev,
+      transactionType: !isPaymentOnly ? "payment" : "sale",
+      productId: !isPaymentOnly ? "" : prev.productId,
+      productData: !isPaymentOnly ? null : prev.productData,
+      salesQuantity: !isPaymentOnly ? 0 : prev.salesQuantity,
+      emptyQuantity: !isPaymentOnly ? 0 : prev.emptyQuantity,
+      todayCredit: !isPaymentOnly ? 0 : prev.todayCredit,
+      customPrice: !isPaymentOnly ? null : prev.customPrice
+    }));
+    
+    if (!isPaymentOnly) {
+      setSelectedProduct(null);
+    }
+  };
+
   useEffect(() => {
     if (formData.customerId) {
       const customer = customers.find(c => c.id === formData.customerId);
@@ -80,7 +102,7 @@ const Sales = () => {
   }, [formData.customerId, customers]);
 
   useEffect(() => {
-    if (formData.productId) {
+    if (formData.productId && !isPaymentOnly) {
       const product = products.find(p => p.id === formData.productId);
       if (product) {
         setSelectedProduct(product);
@@ -92,7 +114,7 @@ const Sales = () => {
         }));
       }
     }
-  }, [formData.productId, products]);
+  }, [formData.productId, products, isPaymentOnly]);
 
   useEffect(() => {
     if (formData.routeId) {
@@ -108,9 +130,9 @@ const Sales = () => {
   }, [formData.routeId, routes]);
 
   useEffect(() => {
-    if (selectedProduct && formData.salesQuantity) {
-      const currentPrice = formData.customPrice || selectedProduct.price;
-      const todayCredit = Number(currentPrice) * Number(formData.salesQuantity || 0);
+    if ((selectedProduct && formData.salesQuantity) || isPaymentOnly) {
+      const currentPrice = isPaymentOnly ? 0 : (formData.customPrice || selectedProduct?.price || 0);
+      const todayCredit = isPaymentOnly ? 0 : Number(currentPrice) * Number(formData.salesQuantity || 0);
       const previousBalance = Number(formData.previousBalance) || 0;
       const totalAmountReceived = Number(formData.totalAmountReceived) || 0;
       const totalBalance = previousBalance + todayCredit - totalAmountReceived;
@@ -121,7 +143,7 @@ const Sales = () => {
         totalBalance
       }));
     }
-  }, [selectedProduct, formData.salesQuantity, formData.totalAmountReceived, formData.previousBalance, formData.customPrice]);
+  }, [selectedProduct, formData.salesQuantity, formData.totalAmountReceived, formData.previousBalance, formData.customPrice, isPaymentOnly]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -134,6 +156,8 @@ const Sales = () => {
   };
 
   const handleCustomPriceChange = (e) => {
+    if (isPaymentOnly) return;
+    
     const { value } = e.target;
     const price = parseFloat(value) || 0;
     
@@ -162,6 +186,8 @@ const Sales = () => {
   };
 
   const handleProductChange = (selectedOption) => {
+    if (isPaymentOnly) return;
+    
     setFormData(prev => ({
       ...prev,
       productId: selectedOption ? selectedOption.value : "",
@@ -191,40 +217,52 @@ const Sales = () => {
       return;
     }
 
-    if (!selectedProduct) {
+    if (!isPaymentOnly && !selectedProduct) {
       toast.error("Please select a product");
       return;
     }
 
-    if (formData.salesQuantity <= 0) {
+    if (!isPaymentOnly && formData.salesQuantity <= 0) {
       toast.error("Sales quantity must be greater than 0");
       return;
     }
 
     try {
-      // Determine the actual price used
-      const actualPrice = formData.customPrice || selectedProduct.price;
-
-      // Prepare complete sale data with only essential route information
-      const saleData = {
+      // Prepare transaction data
+      const transactionData = {
         ...formData,
         customerName: selectedCustomer.name,
         customerPhone: selectedCustomer.phone,
         customerAddress: selectedCustomer.address,
-        productName: selectedProduct.name,
-        productPrice: actualPrice,
-        baseProductPrice: selectedProduct.price,
-        isCustomPrice: formData.customPrice !== null,
         routeId: selectedRoute.id,
         routeName: selectedRoute.name,
-        timestamp: new Date()
+        timestamp: new Date(),
+        transactionType: isPaymentOnly ? "payment" : "sale"
       };
 
-      // Remove the routeData object if it exists
-      delete saleData.routeData;
+      // Add product details if it's a sale
+      if (!isPaymentOnly) {
+        const actualPrice = formData.customPrice || selectedProduct.price;
+        transactionData.productName = selectedProduct.name;
+        transactionData.productPrice = actualPrice;
+        transactionData.baseProductPrice = selectedProduct.price;
+        transactionData.isCustomPrice = formData.customPrice !== null;
+      } else {
+        // For payments, clear product-related fields
+        transactionData.productName = "";
+        transactionData.productPrice = 0;
+        transactionData.baseProductPrice = 0;
+        transactionData.isCustomPrice = false;
+        transactionData.salesQuantity = 0;
+        transactionData.emptyQuantity = 0;
+        transactionData.todayCredit = 0;
+      }
 
-      // Add sale to sales collection
-      await addDoc(collection(db, "sales"), saleData);
+      // Remove the routeData object if it exists
+      delete transactionData.routeData;
+
+      // Add transaction to sales collection
+      await addDoc(collection(db, "sales"), transactionData);
       
       // Update customer document
       const customerDoc = customers.find(c => c.id === formData.customerId);
@@ -239,13 +277,16 @@ const Sales = () => {
           const customerDocRef = querySnapshot.docs[0].ref;
           await updateDoc(customerDocRef, {
             currentBalance: formData.totalBalance,
-            currentGasOnHand: (selectedCustomer.currentGasOnHand || 0) - formData.emptyQuantity + formData.salesQuantity,
+            currentGasOnHand: isPaymentOnly 
+              ? (selectedCustomer.currentGasOnHand || 0)
+              : (selectedCustomer.currentGasOnHand || 0) - formData.emptyQuantity + formData.salesQuantity,
             lastPurchaseDate: new Date()
           });
         }
       }
       
-      toast.success("Sale recorded successfully!");
+      toast.success(isPaymentOnly ? "Payment recorded successfully!" : "Sale recorded successfully!");
+      
       // Reset form
       setFormData({
         id: `TBG${new Date().toISOString().replace(/[-:T.]/g, "").slice(0, 14)}`,
@@ -262,14 +303,15 @@ const Sales = () => {
         totalBalance: 0,
         previousBalance: 0,
         date: new Date().toISOString().split('T')[0],
-        customPrice: null
+        customPrice: null,
+        transactionType: isPaymentOnly ? "payment" : "sale"
       });
       setSelectedProduct(null);
       setSelectedCustomer(null);
       setSelectedRoute(null);
     } catch (error) {
       console.error("Error adding document: ", error);
-      toast.error("Error recording sale: " + error.message);
+      toast.error(`Error recording ${isPaymentOnly ? "payment" : "sale"}: ${error.message}`);
     }
   };
 
@@ -294,7 +336,20 @@ const Sales = () => {
 
   return (
     <div className="form-container">
-      <h2>New Sales</h2>
+      <div className="form-header">
+        <h2>{isPaymentOnly ? "Record Payment" : "New Sale"}</h2>
+        <div className="payment-toggle">
+          <label>
+            <input
+              type="checkbox"
+              checked={isPaymentOnly}
+              onChange={togglePaymentMode}
+            />
+            <span>Payment Only Mode</span>
+          </label>
+        </div>
+      </div>
+      
       <ToastContainer 
         position="top-right" 
         autoClose={5000}
@@ -307,9 +362,10 @@ const Sales = () => {
         draggable
         pauseOnHover
       />
+      
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Sale ID:</label>
+          <label>Transaction ID:</label>
           <input
             type="text"
             name="id"
@@ -356,143 +412,154 @@ const Sales = () => {
         {selectedCustomer && (
           <div className="customer-details">
             <p><strong>Current Balance:</strong> ₹{selectedCustomer.currentBalance || 0}</p>
-            <p><strong>Gas On Hand:</strong> {selectedCustomer.currentGasOnHand || 0} (can be negative)</p>
+            <p><strong>Gas On Hand:</strong> {selectedCustomer.currentGasOnHand || 0}</p>
+            <p><strong>New Balance After Transaction:</strong> ₹{formData.totalBalance}</p>
           </div>
         )}
         
-        <div className="form-group">
-          <label>Product:</label>
-          <Select
-            options={productOptions}
-            value={productOptions.find(option => option.value === formData.productId)}
-            onChange={handleProductChange}
-            placeholder="Select Product"
-            isSearchable
-            required
-          />
-        </div>
-        
-        {selectedProduct && (
+        {!isPaymentOnly && (
           <>
             <div className="form-group">
-              <label>Base Price (₹):</label>
-              <input
-                type="number"
-                value={selectedProduct.price}
-                readOnly
+              <label>Product:</label>
+              <Select
+                options={productOptions}
+                value={productOptions.find(option => option.value === formData.productId)}
+                onChange={handleProductChange}
+                placeholder="Select Product"
+                isSearchable
+                required={!isPaymentOnly}
               />
             </div>
             
-            <div className="form-group">
-              <label>
-                Custom Price (₹) {formData.customPrice !== null && (
-                  <span className="badge bg-warning text-dark">Custom</span>
-                )}
-              </label>
-              <input
-                type="number"
-                name="customPrice"
-                value={formData.customPrice || ''}
-                onChange={handleCustomPriceChange}
-                placeholder="Enter custom price"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Actual Price (₹):</label>
-              <input
-                type="number"
-                value={formData.customPrice || selectedProduct.price}
-                readOnly
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Sales Quantity:</label>
-              <input
-                type="number"
-                name="salesQuantity"
-                value={formData.salesQuantity}
-                onChange={handleChange}
-                required
-                min="1"
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Empty Quantity:</label>
-              <input
-                type="number"
-                name="emptyQuantity"
-                value={formData.emptyQuantity}
-                onChange={handleChange}
-                required
-                min="0"
-              />
-              <small className="text-muted">Current on hand: {selectedCustomer?.currentGasOnHand || 0}</small>
-            </div>
-            
-            <div className="form-group">
-              <label>Today Credit (₹):</label>
-              <input
-                type="number"
-                name="todayCredit"
-                value={formData.todayCredit}
-                readOnly
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Previous Balance (₹):</label>
-              <input
-                type="number"
-                name="previousBalance"
-                value={formData.previousBalance}
-                readOnly
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Total Amount Received (₹):</label>
-              <input
-                type="number"
-                name="totalAmountReceived"
-                value={formData.totalAmountReceived}
-                onChange={handleChange}
+            {selectedProduct && (
+              <>
+                <div className="form-group">
+                  <label>Base Price (₹):</label>
+                  <input
+                    type="number"
+                    value={selectedProduct.price}
+                    readOnly
+                  />
+                </div>
                 
-                min="0"
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Total Balance (₹):</label>
-              <input
-                type="number"
-                name="totalBalance"
-                value={formData.totalBalance}
-                readOnly
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>New Gas On Hand After Sale:</label>
-              <input
-                type="number"
-                value={
-                  selectedCustomer 
-                    ? (selectedCustomer.currentGasOnHand || 0) - formData.emptyQuantity + formData.salesQuantity
-                    : 0
-                }
-                readOnly
-              />
-              <small className="text-muted">Can be negative if returning more than currently has</small>
-            </div>
+                <div className="form-group">
+                  <label>
+                    Custom Price (₹) {formData.customPrice !== null && (
+                      <span className="badge bg-warning text-dark">Custom</span>
+                    )}
+                  </label>
+                  <input
+                    type="number"
+                    name="customPrice"
+                    value={formData.customPrice || ''}
+                    onChange={handleCustomPriceChange}
+                    placeholder="Enter custom price"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Actual Price (₹):</label>
+                  <input
+                    type="number"
+                    value={formData.customPrice || selectedProduct.price}
+                    readOnly
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Sales Quantity:</label>
+                  <input
+                    type="number"
+                    name="salesQuantity"
+                    value={formData.salesQuantity}
+                    onChange={handleChange}
+                    required
+                    min="1"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Empty Quantity:</label>
+                  <input
+                    type="number"
+                    name="emptyQuantity"
+                    value={formData.emptyQuantity}
+                    onChange={handleChange}
+                    required
+                    min="0"
+                  />
+                  <small className="text-muted">Current on hand: {selectedCustomer?.currentGasOnHand || 0}</small>
+                </div>
+                
+                <div className="form-group">
+                  <label>Today Credit (₹):</label>
+                  <input
+                    type="number"
+                    name="todayCredit"
+                    value={formData.todayCredit}
+                    readOnly
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>New Gas On Hand After Sale:</label>
+                  <input
+                    type="number"
+                    value={
+                      selectedCustomer 
+                        ? (selectedCustomer.currentGasOnHand || 0) - formData.emptyQuantity + formData.salesQuantity
+                        : 0
+                    }
+                    readOnly
+                  />
+                  <small className="text-muted">Can be negative if returning more than currently has</small>
+                </div>
+              </>
+            )}
           </>
         )}
         
-        <button type="submit" className="submit-btn btn-success btn-sm">Save</button>
+        <div className="form-group">
+          <label>Previous Balance (₹):</label>
+          <input
+            type="number"
+            name="previousBalance"
+            value={formData.previousBalance}
+            readOnly
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Amount Received (₹):</label>
+          <input
+            type="number"
+            name="totalAmountReceived"
+            value={formData.totalAmountReceived}
+            onChange={handleChange}
+            required
+            min="0"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>New Balance (₹):</label>
+          <input
+            type="number"
+            name="totalBalance"
+            value={formData.totalBalance}
+            readOnly
+          />
+        </div>
+        
+        <button 
+          type="submit" 
+          className="submit-btn btn-success btn-sm"
+          disabled={!selectedCustomer || !selectedRoute || (!isPaymentOnly && !selectedProduct)}
+        >
+          {isPaymentOnly ? "Record Payment" : "Record Sale"}
+        </button>
       </form>
     </div>
   );
