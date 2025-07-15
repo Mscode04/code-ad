@@ -233,7 +233,7 @@ const UpdateSale = () => {
 
                 <Form.Group className="mb-3">
                   <Form.Label>Product</Form.Label>
-                  <Form.Control as="select" name="productId" value={sale.productId} onChange={handleChange} required>
+                  <Form.Control as="select" name="productId" value={sale.productId} onChange={handleChange} >
                     <option value="">Select Product</option>
                     {products.map(p => (
                       <option key={p.id} value={p.id}>
@@ -287,8 +287,7 @@ const UpdateSale = () => {
                     name="salesQuantity"
                     value={sale.salesQuantity}
                     onChange={handleChange}
-                    required
-                    min="1"
+                  
                   />
                 </Form.Group>
 
@@ -299,8 +298,7 @@ const UpdateSale = () => {
                     name="emptyQuantity"
                     value={sale.emptyQuantity}
                     onChange={handleChange}
-                    required
-                    min="0"
+                    
                   />
                 </Form.Group>
               </Col>
