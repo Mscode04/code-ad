@@ -92,10 +92,13 @@ const AllSales = () => {
   // Calculate summary statistics
   const calculateSummary = () => {
     return filteredSales.reduce((acc, sale) => {
-      acc.totalSalesAmount += Number(sale.todayCredit) || 0;
+      const price = Number(sale.customPrice || sale.productPrice || 0);
+      const qty = Number(sale.salesQuantity || 0);
+      const saleAmount = price * qty;
+      acc.totalSalesAmount += saleAmount;
       acc.totalReceived += Number(sale.totalAmountReceived) || 0;
       acc.totalBalance += Number(sale.totalBalance) || 0;
-      acc.totalQuantity += Number(sale.salesQuantity) || 0;
+      acc.totalQuantity += qty;
       acc.totalEmptyQuantity += Number(sale.emptyQuantity) || 0;
       return acc;
     }, {
@@ -124,8 +127,8 @@ const AllSales = () => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
     }).format(amount || 0);
   };
 
@@ -200,14 +203,6 @@ if (loading) {
 
       {/* Summary Cards */}
       <Row className="mb-4">
-        {/* <Col md={2}>
-          <Card className="text-white bg-info mb-3">
-            <Card.Body>
-              <Card.Title>Total Documents</Card.Title>
-              <Card.Text>{summary.totalDocuments}</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col> */}
         <Col md={2}>
           <Card className="text-white bg-primary mb-3">
             <Card.Body>
@@ -228,7 +223,7 @@ if (loading) {
           <Card className={`text-white ${summary.totalBalance > 0 ? 'bg-danger' : 'bg-warning'} mb-3`}>
             <Card.Body>
               <Card.Title>Balance in This Filter</Card.Title>
-              <Card.Text>{formatCurrency(summary.totalSalesAmount-summary.totalReceived)}</Card.Text>
+              <Card.Text>{formatCurrency(summary.totalBalance)}</Card.Text>
             </Card.Body>
           </Card>
         </Col>
@@ -325,9 +320,9 @@ if (loading) {
           <Button 
             variant="outline-secondary"
             onClick={resetFilters}
-            className="w-100"
+            className="w-100 me-4"
           >
-            Reset
+            Clear
           </Button>
         </Col>
       </Row>

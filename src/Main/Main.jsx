@@ -1,32 +1,68 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import logo from "../assets/img/logo.jpg"; // Make sure to have your logo.jpg in the same directory
+import logo from "../assets/img/logo.jpg";
 import "./Main.css";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../Firebase/config";
 
 const Main = () => {
   const navigate = useNavigate();
   const [showMobileWarning, setShowMobileWarning] = useState(false);
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
-  // Check screen size on component mount and resize
-  React.useEffect(() => {
-    const checkScreenSize = () => {
-      if (window.innerWidth < 768) {
-        setShowMobileWarning(true);
-      } else {
-        setShowMobileWarning(false);
-      }
-    };
+  // Dashboard stats
+  const [todaySaleAmount, setTodaySaleAmount] = useState(0);
+  const [todayAmountReceived, setTodayAmountReceived] = useState(0);
+  const [todayCredit, setTodayCredit] = useState(0);
 
+  // Responsive warning
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setShowMobileWarning(window.innerWidth < 768);
+    };
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
-
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Navigation items
+  // Fetch today's sales and calculate stats
+  useEffect(() => {
+    const fetchTodaySales = async () => {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const salesQuery = query(
+          collection(db, "sales"),
+          where("date", "==", today),
+          where("transactionType", "==", "sale")
+        );
+        const snapshot = await getDocs(salesQuery);
+        let totalSale = 0;
+        let totalReceived = 0;
+        let totalCredit = 0;
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const price = data.customPrice || data.productPrice || 0;
+          const qty = data.salesQuantity || 0;
+          const amountReceived = data.totalAmountReceived || 0;
+          const saleAmount = price * qty;
+          totalSale += saleAmount;
+          totalReceived += amountReceived;
+          totalCredit += saleAmount - amountReceived;
+        });
+        setTodaySaleAmount(totalSale);
+        setTodayAmountReceived(totalReceived);
+        setTodayCredit(totalCredit);
+      } catch (err) {
+        setTodaySaleAmount(0);
+        setTodayAmountReceived(0);
+        setTodayCredit(0);
+      }
+    };
+    fetchTodaySales();
+  }, []);
+
   const navItems = [
     { path: "/dashboard", name: "Dashboard", icon: "dashboard" },
     { path: "/all-sales", name: "Sales Reports", icon: "assessment" },
@@ -38,7 +74,6 @@ const Main = () => {
     { path: "/products", name: "Products", icon: "inventory" },
     { path: "/check-in", name: "Check-in Reports", icon: "checklist" },
     { path: "/msg", name: "Massages", icon: "assignment" },
-    // { path: "/help", name: "Help", icon: "help" },
   ];
 
   const handleLogout = () => {
@@ -46,7 +81,7 @@ const Main = () => {
       <div>
         <p>Are you sure you want to logout?</p>
         <div className="logout-confirm-buttons">
-          <button 
+          <button
             className="confirm-btn"
             onClick={() => {
               toast.dismiss();
@@ -55,7 +90,7 @@ const Main = () => {
           >
             Yes
           </button>
-          <button 
+          <button
             className="cancel-btn"
             onClick={() => toast.dismiss()}
           >
@@ -72,14 +107,15 @@ const Main = () => {
     );
   };
 
-  const toggleMenu = () => {
-    setIsMenuCollapsed(!isMenuCollapsed);
-  };
+  const toggleMenu = () => setIsMenuCollapsed(!isMenuCollapsed);
 
   const getCurrentDate = () => {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     return new Date().toLocaleDateString(undefined, options);
   };
+
+  // Helper to show 1 decimal
+  const fmt = (num) => Number(num).toFixed(1);
 
   return (
     <div className="dashboard-container">
@@ -97,12 +133,6 @@ const Main = () => {
       <nav className={`sidebar ${isMenuCollapsed ? "collapsed" : ""}`}>
         <div className="sidebar-header">
           <img src={logo} alt=" Logo" className="logo" />
-      
-          {/* <button className="menu-toggle" onClick={toggleMenu}>
-            <span className="material-icons">
-              {isMenuCollapsed ? "chevron_right" : "chevron_left"}
-            </span>
-          </button> */}
         </div>
         <ul className="nav-items">
           {navItems.map((item) => (
@@ -139,23 +169,36 @@ const Main = () => {
             </button>
             <h1>Admin Dashboard</h1>
             <div className="current-date">{getCurrentDate()}</div>
+            {/* Dashboard Stats */}
+            <div style={{
+              marginLeft: 24,
+              fontWeight: 500,
+              display: "flex",
+              gap: "18px",
+              alignItems: "center"
+            }}>
+              {/* <span>
+                <span style={{ color: "#1976d2" }}>Today Sale:</span> ₹{fmt(todaySaleAmount)}
+              </span>
+              <span>
+                <span style={{ color: "#388e3c" }}>Received:</span> ₹{fmt(todayAmountReceived)}
+              </span>
+              <span>
+                <span style={{ color: "#d32f2f" }}>Credited:</span> ₹{fmt(todayCredit)}
+              </span> */}
+            </div>
           </div>
           <div className="header-right">
-            {/* <button className="notification-btn">
-              <span className="material-icons">notifications</span>
-              <span className="notification-badge">3</span>
-            </button> */}
             <button 
               className="logout-btn"
               onClick={handleLogout}
             >
-              {/* <span className="material-icons">logout</span> */}
               {!isMenuCollapsed && <span>Logout</span>}
             </button>
           </div>
         </header>
 
-        {/* Page Content - This will render nested routes */}
+        {/* Page Content */}
         <div className="page-content">
           <Outlet />
         </div>
@@ -170,14 +213,11 @@ const Main = () => {
               </Link>
             </div>
             <div className="copyright">
-              © {new Date().getFullYear()} © Tharayil Bharath Gas. All rights reserved. Designed & Developed by <a href="https://neuraq.in/" class="text-dark text-decoration-none">neuraq.in</a>
-
+              © {new Date().getFullYear()} © Tharayil Bharath Gas. All rights reserved. Designed & Developed by <a href="https://neuraq.in/" className="text-dark text-decoration-none">neuraq.in</a>
             </div>
-          
           </div>
         </footer>
       </div>
-
       <ToastContainer />
     </div>
   );

@@ -233,28 +233,41 @@ if (loading) {
               <TableCell>Sale ID</TableCell>
               <TableCell>Product</TableCell>
               <TableCell>Quantity</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Received</TableCell>
+              <TableCell>Price</TableCell>
+              <TableCell>Today Sale Amount</TableCell>
+              <TableCell>Today Credit</TableCell>
+              <TableCell>Amount Received</TableCell>
               <TableCell>Balance</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {sales.map(sale => (
-              <TableRow key={sale.id}>
-                <TableCell>{format(sale.timestamp?.toDate(), 'dd MMM yyyy')}</TableCell>
-                <TableCell>{sale.id}</TableCell>
-                <TableCell>{sale.productName}</TableCell>
-                <TableCell>{sale.salesQuantity}</TableCell>
-                <TableCell>₹{sale.todayCredit?.toLocaleString()}</TableCell>
-                <TableCell>₹{sale.totalAmountReceived?.toLocaleString()}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={`₹${sale.totalBalance?.toLocaleString()}`}
-                    color={sale.totalBalance > 0 ? 'error' : 'success'}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
+            {sales.map(sale => {
+              const price = Number(sale.customPrice || sale.productPrice || 0);
+              const qty = Number(sale.salesQuantity || 0);
+              const todaySaleAmount = price * qty;
+              const amountReceived = Number(sale.totalAmountReceived || 0);
+              const todayCredit = todaySaleAmount - amountReceived;
+              const totalBalance = Number(sale.totalBalance || 0);
+
+              return (
+                <TableRow key={sale.id}>
+                  <TableCell>{sale.timestamp?.toDate ? format(sale.timestamp.toDate(), 'dd MMM yyyy') : ''}</TableCell>
+                  <TableCell>{sale.id}</TableCell>
+                  <TableCell>{sale.productName}</TableCell>
+                  <TableCell>{qty}</TableCell>
+                  <TableCell>₹{price.toLocaleString()}</TableCell>
+                  <TableCell>₹{todaySaleAmount.toLocaleString()}</TableCell>
+                  <TableCell>₹{todayCredit.toLocaleString()}</TableCell>
+                  <TableCell>₹{amountReceived.toLocaleString()}</TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={`₹${totalBalance.toLocaleString()}`}
+                      color={totalBalance > 0 ? 'error' : 'success'}
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       ) : (

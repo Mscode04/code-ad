@@ -158,6 +158,15 @@ const SaleDetail = () => {
     );
   }
 
+  // Calculate new logic fields
+  const price = Number(sale.customPrice || sale.productPrice || 0);
+  const qty = Number(sale.salesQuantity || 0);
+  const todaySaleAmount = price * qty;
+  const amountReceived = Number(sale.totalAmountReceived || 0);
+  const todayCredit = todaySaleAmount - amountReceived;
+  const previousBalance = Number(sale.previousBalance || 0);
+  const totalBalance = Number(sale.totalBalance || 0);
+
   return (
     <Container className="py-4">
       {/* Toast Container for all notifications */}
@@ -248,18 +257,21 @@ const SaleDetail = () => {
             <Col md={6}>
               <h5>Transaction Details</h5>
               <hr />
-              <p><strong>Total Amount:</strong> {formatCurrency(sale.todayCredit)}</p>
-              <p><strong>Amount Paid:</strong> {formatCurrency(sale.totalAmountReceived)}</p>
-              <p><strong>Payment Method:</strong> {sale.paymentMethod || 'Cash'}</p>
+              <p><strong>Price per Unit:</strong> {formatCurrency(price)}</p>
+              <p><strong>Quantity:</strong> {qty}</p>
+              <p><strong>Today Sale Amount:</strong> {formatCurrency(todaySaleAmount)}</p>
+              <p><strong>Amount Received:</strong> {formatCurrency(amountReceived)}</p>
+              <p><strong>Today Credit:</strong> {formatCurrency(todayCredit)}</p>
+              {/* <p><strong>Payment Method:</strong> {sale.paymentMethod || 'Cash'}</p> */}
             </Col>
             <Col md={6}>
               <h5>Balance Information</h5>
               <hr />
-              <p><strong>Previous Balance:</strong> {formatCurrency(sale.previousBalance)}</p>
+              <p><strong>Previous Balance:</strong> {formatCurrency(previousBalance)}</p>
               <p>
                 <strong>Current Balance:</strong>
-                <Badge bg={sale.totalBalance > 0 ? 'danger' : 'success'} className="ms-2">
-                  {formatCurrency(sale.totalBalance)}
+                <Badge bg={totalBalance > 0 ? 'danger' : 'success'} className="ms-2">
+                  {formatCurrency(totalBalance)}
                 </Badge>
               </p>
             </Col>

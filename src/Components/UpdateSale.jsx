@@ -13,6 +13,7 @@ const UpdateSale = () => {
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [todaySaleAmount, setTodaySaleAmount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,11 +64,17 @@ const UpdateSale = () => {
           : value
       };
 
-      // Recalculate todayCredit if salesQuantity changes
-      if (name === "salesQuantity") {
-        const currentPrice = updatedSale.customPrice || updatedSale.baseProductPrice || updatedSale.productPrice;
-        updatedSale.todayCredit = currentPrice * updatedSale.salesQuantity;
-      }
+      // Calculate actual price
+      const actualPrice = updatedSale.customPrice || updatedSale.baseProductPrice || updatedSale.productPrice;
+      const saleQty = updatedSale.salesQuantity || 0;
+      const amountReceived = updatedSale.totalAmountReceived || 0;
+
+      // Calculate todaySaleAmount and todayCredit
+      const saleAmount = actualPrice * saleQty;
+      updatedSale.todaySaleAmount = saleAmount;
+      updatedSale.todayCredit = saleAmount - amountReceived;
+
+      setTodaySaleAmount(saleAmount);
 
       return updatedSale;
     });
@@ -76,15 +83,23 @@ const UpdateSale = () => {
   const handleCustomPriceChange = (e) => {
     const { value } = e.target;
     const price = parseFloat(value) || 0;
-    
+
     setSale(prev => {
-      const updatedSale = {
+      const actualPrice = price > 0 ? price : (prev.baseProductPrice || prev.productPrice);
+      const saleQty = prev.salesQuantity || 0;
+      const amountReceived = prev.totalAmountReceived || 0;
+
+      const saleAmount = actualPrice * saleQty;
+      const todayCredit = saleAmount - amountReceived;
+
+      setTodaySaleAmount(saleAmount);
+
+      return {
         ...prev,
         customPrice: price > 0 ? price : null,
-        todayCredit: price > 0 ? price * prev.salesQuantity : (prev.baseProductPrice || prev.productPrice) * prev.salesQuantity
+        todaySaleAmount: saleAmount,
+        todayCredit
       };
-      
-      return updatedSale;
     });
   };
 
@@ -144,6 +159,22 @@ const UpdateSale = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (sale) {
+      const actualPrice = sale.customPrice || sale.baseProductPrice || sale.productPrice || 0;
+      const saleQty = sale.salesQuantity || 0;
+      const amountReceived = sale.totalAmountReceived || 0;
+      const saleAmount = actualPrice * saleQty;
+      setTodaySaleAmount(saleAmount);
+
+      setSale(prev => ({
+        ...prev,
+        todaySaleAmount: saleAmount,
+        todayCredit: saleAmount - amountReceived
+      }));
+    }
+  }, [sale?.customPrice, sale?.baseProductPrice, sale?.productPrice, sale?.salesQuantity, sale?.totalAmountReceived]);
 
   if (loading) {
     return (
@@ -313,12 +344,24 @@ const UpdateSale = () => {
                     name="totalAmountReceived"
                     value={sale.totalAmountReceived}
                     onChange={handleChange}
-                    
                     min="0"
                   />
                 </Form.Group>
               </Col>
 
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Today Sale Amount (₹)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={todaySaleAmount}
+                    readOnly
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Today Credit (₹)</Form.Label>
@@ -330,9 +373,7 @@ const UpdateSale = () => {
                   />
                 </Form.Group>
               </Col>
-            </Row>
 
-            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Previous Balance (₹)</Form.Label>
@@ -344,7 +385,9 @@ const UpdateSale = () => {
                   />
                 </Form.Group>
               </Col>
+            </Row>
 
+            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Total Balance (₹)</Form.Label>

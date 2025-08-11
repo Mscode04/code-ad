@@ -92,7 +92,10 @@ const AllCustomers = () => {
   // Calculate totals
   const totalCustomers = filteredCustomers.length;
   const totalGasOnHand = filteredCustomers.reduce((sum, customer) => sum + (customer.currentGasOnHand || 0), 0);
-  const totalBalance = filteredCustomers.reduce((sum, customer) => sum + (customer.currentBalance || 0), 0);
+  const totalBalance = filteredCustomers.reduce(
+    (sum, customer) => sum + Number(customer.currentBalance ?? 0),
+    0
+  );
 
   if (loading) {
     return (
@@ -157,7 +160,7 @@ const AllCustomers = () => {
           </Col>
           <Col md={2} className="d-flex align-items-end">
             <Button variant="success" onClick={exportToExcel}>
-              Export to Excel
+              Export
             </Button>
           </Col>
         </Row>
@@ -180,7 +183,11 @@ const AllCustomers = () => {
         <Col md={4}>
           <div className="p-3 bg-danger rounded shadow-sm">
             <h5 className="text-light">Total Balance</h5>
-            <h3><Badge bg="">₹{totalBalance.toLocaleString('en-IN')}</Badge></h3>
+<h3>
+  <Badge bg="">
+    ₹{totalBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+  </Badge>
+</h3>
           </div>
         </Col>
       </Row>
