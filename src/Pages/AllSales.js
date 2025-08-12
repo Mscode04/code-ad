@@ -202,16 +202,16 @@ if (loading) {
       </div>
 
       {/* Summary Cards */}
-      <Row className="mb-4">
-        <Col md={2}>
+      <Row className="">
+        <Col md={4}>
           <Card className="text-white bg-primary mb-3">
             <Card.Body>
-              <Card.Title>Total Sales Amount</Card.Title>
+              <Card.Title>Sales Amount</Card.Title>
               <Card.Text>{formatCurrency(summary.totalSalesAmount)}</Card.Text>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={2}>
+        <Col md={4}>
           <Card className="text-white bg-success mb-3">
             <Card.Body>
               <Card.Title>Total Received</Card.Title>
@@ -219,23 +219,18 @@ if (loading) {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={2}>
-          <Card className={`text-white ${summary.totalBalance > 0 ? 'bg-danger' : 'bg-warning'} mb-3`}>
-            <Card.Body>
-              <Card.Title>Balance in This Filter</Card.Title>
-              <Card.Text>{formatCurrency(summary.totalBalance)}</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={2}>
+
+        <Col md={4}>
           <Card className={`text-white ${summary.totalBalance > 0 ? 'bg-warning' : 'bg-warning'} mb-3`}>
             <Card.Body>
               <Card.Title>Total Balance</Card.Title>
-              <Card.Text>{formatCurrency(summary.totalBalance)}</Card.Text>
+              <Card.Text>{formatCurrency((summary.totalSalesAmount)-(summary.totalReceived))}</Card.Text>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={2}>
+      </Row>
+      <Row className="mb-2">
+         <Col md={6}>
           <Card className="text-white bg-secondary mb-3">
             <Card.Body>
               <Card.Title>Total Quantity</Card.Title>
@@ -243,7 +238,7 @@ if (loading) {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={2}>
+        <Col md={6}>
           <Card className="text-white bg-dark mb-3">
             <Card.Body>
               <Card.Title>Empty Quantity</Card.Title>
