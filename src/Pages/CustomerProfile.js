@@ -182,6 +182,12 @@ if (loading) {
             <ListItemText primary="Address" secondary={customer.address} />
           </ListItem>
           <Divider />
+             <ListItem>
+            <ListItemText 
+              primary="Gst Number" 
+              secondary={customer.gstNumber || 'N/A'} 
+            />
+          </ListItem>
           <ListItem>
             <ListItemText 
               primary="Current Balance" 
@@ -201,6 +207,7 @@ if (loading) {
               secondary={customer.password || '0'} 
             />
           </ListItem>
+       
         </List>
         
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>

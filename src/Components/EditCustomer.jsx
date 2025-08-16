@@ -22,6 +22,7 @@ const EditCustomer = () => {
     route: "",
     currentBalance: 0,
     currentGasOnHand: 0,
+    gstNumber: "",
     lastPurchaseDate: null,
     createdAt: ""
   });
@@ -54,6 +55,7 @@ const EditCustomer = () => {
           route: customerData.route || "",
           currentBalance: customerData.currentBalance || 0,
           currentGasOnHand: customerData.currentGasOnHand || 0,
+          gstNumber: customerData.gstNumber || "",
           lastPurchaseDate: customerData.lastPurchaseDate || null,
           createdAt: customerData.createdAt || new Date().toISOString()
         });
@@ -277,6 +279,22 @@ const EditCustomer = () => {
               required
               className="form-control"
             />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>GST Number:</label>
+            <input
+              type="text"
+              name="gstNumber"
+              value={formData.gstNumber}
+              onChange={handleChange}
+              placeholder="22AAAAA0000A1Z5"
+              pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+              className="form-control"
+            />
+            <small className="text-muted">Format: 22AAAAA0000A1Z5</small>
           </div>
         </div>
 

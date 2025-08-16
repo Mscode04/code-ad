@@ -19,10 +19,9 @@ const NewConnection = () => {
     ownerPhone: "",
     password: "",
     route: "",
-    currentBalance: 
-    '',
-    currentGasOnHand: 
-    '', // Initialize gas on hand
+    currentBalance: '',
+    currentGasOnHand: '', // Initialize gas on hand
+    gstNumber: "",
     lastPurchaseDate: null,
     createdAt: new Date().toISOString()
   });
@@ -132,6 +131,7 @@ const NewConnection = () => {
         route: "",
         currentBalance: 0,
         currentGasOnHand: 0,
+        gstNumber: "",
         lastPurchaseDate: null,
         createdAt: new Date().toISOString()
       });
@@ -288,6 +288,22 @@ const NewConnection = () => {
               required
               className="form-control"
             />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>GST Number:</label>
+            <input
+              type="text"
+              name="gstNumber"
+              value={formData.gstNumber}
+              onChange={handleChange}
+              placeholder="22AAAAA0000A1Z5"
+              pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+              className="form-control"
+            />
+            <small className="text-muted">Format: 22AAAAA0000A1Z5</small>
           </div>
         </div>
 
