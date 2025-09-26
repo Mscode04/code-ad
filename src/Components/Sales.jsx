@@ -516,7 +516,7 @@ const Sales = () => {
                       value={formData.salesQuantity}
                       onChange={handleChange}
                       required
-                      min="1"
+                      
                     />
                   </div>
                   
@@ -528,7 +528,7 @@ const Sales = () => {
                       value={formData.emptyQuantity}
                       onChange={handleChange}
                       required
-                      min="0"
+                      
                     />
                     <small className="text-muted">Current on hand: {selectedCustomer?.currentGasOnHand || 0}</small>
                   </div>
