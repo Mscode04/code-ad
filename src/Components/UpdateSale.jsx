@@ -344,7 +344,7 @@ const UpdateSale = () => {
                     name="totalAmountReceived"
                     value={sale.totalAmountReceived}
                     onChange={handleChange}
-                    min="0"
+                    
                   />
                 </Form.Group>
               </Col>
